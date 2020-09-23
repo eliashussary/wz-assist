@@ -48,7 +48,10 @@ func toInt(s interface{}) int {
 	return v
 }
 func toUint16(s interface{}) uint16 {
-	v, _ := s.(uint16)
+
+	i, _ := s.(int)
+	v := uint16(i)
+
 	return v
 }
 
@@ -66,7 +69,6 @@ var runCmd = &cobra.Command{
 	Short: "Runs the assist",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("run called")
 		keyBindsConfig := viper.GetStringMap("keybinds")
 		delaysConfig := viper.GetStringMap("delays")
 		recoilSenseConfig := viper.GetStringMap("recoilsense")
