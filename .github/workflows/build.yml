@@ -1,0 +1,74 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.15
+        id: go
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Inject version
+        run: sed -i "s/develop/$(date +'%Y-%m-%d')/" ./cmd/currentVersion.go
+
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+          if [ -f Gopkg.toml ]; then
+              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+              dep ensure
+          fi
+
+      - name: Get CGO dependencies
+        run: |
+          sudo apt-get install gcc-multilib
+          sudo apt-get install gcc-mingw-w64
+
+      - name: build
+        run: |
+          export GOOS=windows
+          export GOARCH=386
+          export CGO_ENABLED=1
+          export CC=i686-w64-mingw32-gcc
+          go build -o wz-assist.exe .
+
+      - name: Zip artifact
+        run: |
+          zip --junk-paths wz-assist.zip wz-assist.exe .wz-assist.yaml readme.md
+
+      - name: Create Release
+        id: create_release_current
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.date.outputs.date }}
+          release_name: ${{ steps.date.outputs.date }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset-current
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release_current.outputs.upload_url }}
+          asset_path: ./wz-assist.zip
+          asset_name: wz-assist.zip
+          asset_content_type: application/zip
