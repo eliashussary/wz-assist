@@ -25,6 +25,12 @@ func click() {
 				DwFlags: w32.MOUSEEVENTF_LEFTDOWN,
 			},
 		},
+		{
+			Type: w32.INPUT_MOUSE,
+			Mi: w32.MOUSEINPUT{
+				DwFlags: w32.MOUSEEVENTF_LEFTUP,
+			},
+		},
 	})
 }
 

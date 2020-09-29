@@ -62,17 +62,21 @@ func (a *Assist) isFiring() bool {
 	return isPressed(w32.VK_LBUTTON)
 }
 
+func (a *Assist) isADS() bool {
+	return isPressed(a.Keybinds.ADS)
+}
+
 func (a *Assist) isADSFiring() bool {
-	return a.isFiring() && isPressed(a.Keybinds.ADS)
+	return a.isFiring() && a.isADS()
 }
 
 func (a *Assist) isRapidFire() bool {
-	return a.isADSFiring() && isPressed(a.Keybinds.RapidFireToggle)
+	return a.isADS() && isPressed(a.Keybinds.RapidFireToggle)
 }
 
 func (a *Assist) handleRecoil() {
 	for {
-		for a.isADSFiring() && !isToggled(a.Keybinds.RecoilToggle) {
+		for a.isADSFiring() || a.isRapidFire() {
 			moveMouse(0, 1)
 			time.Sleep(a.getSense())
 		}
